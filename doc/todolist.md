@@ -30,7 +30,7 @@
 - [ ] **T0.3 H5 前端骨架**（`apps/h5`：Vue 3 + TS + Vite + Vant 4，PC 限宽 480px 居中）
 - [ ] **T0.4 管理端骨架**（`apps/admin`：Vue 3 + TS + Vite + Element Plus，Vite `base: '/admin/'`，AdminLayout 左侧菜单 + 顶栏）
 - [ ] **T0.5 共享 api-client**（`packages/api-client`：TS 类型 + `request()` 封装，自动带 JWT、401 跳登录、`MUST_CHANGE_PASSWORD` 跳改密、统一错误 toast）
-- [ ] **T0.6 Dockerfile 多阶段构建**（node 构建前端 → go 构建内嵌 → alpine 运行，对齐 sheji.md §7.1；验证本地 `docker build` 通过）
+- [ ] **T0.6 Dockerfile 多阶段构建**（node 构建前端 → go 构建内嵌 → alpine 运行，对齐 sheji.md §7.1；依赖分层缓存：先 COPY `package.json`/`pnpm-lock.yaml` 再 `pnpm install`、先 COPY `go.mod`/`go.sum` 再 `go mod download`，后 COPY 源码——避免改代码触发全量重下依赖；验证本地 `docker build` 通过）
 - [ ] **T0.6a 静态路由策略**（Go 内实现，对齐 sheji.md §7.2：`/api/*` 优先走 API；`/admin*` 返回 admin SPA；其余返回 h5 SPA；均带 SPA fallback 到 index.html——支撑 M0 验收的占位页访问）
 - [ ] **T0.7 本地开发环境**
   - `docker-compose.yml` 或说明文档：本地 PostgreSQL + 迁移执行方式
@@ -55,13 +55,14 @@
   - `dish_reviews`（`unique(user_id, menu_date, meal, dish_name)`、rating check）
   - `suggestions`（status check）
   - 所有 comment on 语句随迁移写入
+  - 每个迁移 up/down 成对编写（golang-migrate 规范），down 为 drop 反向操作
 - [ ] **T1.2 超管种子数据**（bcrypt 哈希替换 `<bcrypt(admin123)>` 占位符；幂等，勿重复插入）
 - [ ] **T1.3 sqlc 配置与查询文件骨架**（`server/internal/db/`，pgx/v5 驱动）
 
 ### 认证
 
 - [ ] **T1.4 登录接口** `POST /api/v1/auth/login`
-  - 工号 + bcrypt 校验；禁用账号拒绝
+  - 工号 + bcrypt 校验（cost=10，对齐 sheji.md §8）；禁用账号拒绝
   - JWT claims：`uid`、`role`、`mcp`
   - `remember=true` → 30 天（前端 localStorage）；否则 12 小时（sessionStorage）
 - [ ] **T1.5 防爆破**：`emp_no+IP` 失败计数，5 次锁 10 分钟（内存实现）
@@ -79,9 +80,10 @@
 
 - [ ] **T1.12 H5 登录页**（工号+密码+记住登录）+ `/my/password` 改密页（首登强制跳转）
 - [ ] **T1.13 admin 登录页** + `/password` 改密页；路由守卫 `beforeEach` 校验 token 与角色，`mcp` 强制跳改密
-- [ ] **T1.14 api-client 对接认证接口**（login/me/password 类型与封装）
+- [ ] **T1.14 api-client 对接认证接口**（login/me/password 类型与封装；token 过期不做 refresh，由前端静默重登录或下次登录完成续期，对齐 sheji.md §5.2）
+- [ ] **T1.15 自动登录恢复**：两端应用启动时从 localStorage 恢复 remember token → 调 `GET /me` 校验有效性（失效则清除并视为未登录），实现"下次打开自动登录"（对齐 xuqiu.md 5.1）
 
-**验收**：admin/admin123 首登被强制改密；错误密码 5 次锁定 10 分钟；改密前签发的旧 token（mcp=true）因与 DB `must_change_password=false` 不一致被拦截返回 `MUST_CHANGE_PASSWORD`；三角色登录后各自跳转正确入口。
+**验收**：admin/admin123 首登被强制改密；错误密码 5 次锁定 10 分钟；改密前签发的旧 token（mcp=true）因与 DB `must_change_password=false` 不一致被拦截返回 `MUST_CHANGE_PASSWORD`；三角色登录后各自跳转正确入口；勾选记住登录后重新打开应用自动登录（token 恢复 + `/me` 校验通过）。
 
 ---
 
@@ -96,7 +98,7 @@
   - 核销截止：`verify_rules` 覆盖值 || 默认 09:00/13:30/19:00
   - 点评窗口 00:00~23:59:59
   - 核销/登记目标日期必须为当日
-  - **单元测试覆盖全部边界**（00:00 整点、+14/+15 天、-30/-31 天）
+  - **单元测试覆盖全部边界**：日期类（00:00 整点、+14/+15 天、-30/-31 天）；核销截止类（默认时刻 09:00/13:30/19:00 与 verify_rules 覆盖值，`now == 截止` 临界点）；点评窗口类（23:59:59 与次日 00:00）——对齐 sheji.md §5.1 全部 7 条规则
 - [ ] **T2.2 发布菜谱** `POST /admin/menus`
   - 单事务逐行插入；任一行 `menu_date` 越界（∉ [today, today+14]）→ 整批拒绝
   - 同餐同名冲突行跳过并在响应中返回失败明细，其余行提交（与员工导入模式一致，对齐 sheji.md §5.3）
@@ -117,13 +119,13 @@
 - [ ] **T2.8 H5 历史菜谱页**（`/history`：日期范围 ≤30 天 + 快捷"上周"）
 - [ ] **T2.9 admin 菜谱发布页**（`/menus/publish`：周视图 + 菜品行编辑 + 复制上周）
 - [ ] **T2.10 admin 菜品下架页**（`/menus/items`：按日期餐次列出，下架/恢复开关）
-- [ ] **T2.11 Tabbar**（菜谱 | 记录 | 我的）
+- [ ] **T2.11 Tabbar**（菜谱 | 记录 | 我的；M2 仅"菜谱"可达，"记录/我的"入口 M3 交付后启用，避免 M2 点击落空）
 
 ### 员工管理（提前至此：M3 起报名测试需要员工账号）
 
 - [ ] **T2.12 Excel/CSV 员工导入** `POST /admin/employees/import`
   - excelize + CSV（UTF-8 建议 BOM）；逐行校验工号非空且不重复（文件内+库内）
-  - 响应 `{success_count, failures:[{row, reason}]}`
+  - 响应 `{success_count, failures:[{row, reason}]}`；成功行即时生效（默认密码 123456、`must_change_password=true`，对齐 sheji.md §5.5）
 - [ ] **T2.13 员工管理接口与页面**：`GET/POST /admin/employees`、`PATCH /admin/employees/:id`（仅姓名/部门，工号不可改）+ admin 员工管理页（手动添加、编辑、导入结果明细弹窗）
 
 **验收**：游客不登录可看 15 天菜谱与历史；发布超过 15 天的日期整批被拒；同餐同名重复发布返回失败明细且其余行成功；下架菜品 H5 显示"已下架"标识且不影响该餐次（M3 报名验证）；导入含重复工号的文件返回精确行号明细。
@@ -218,7 +220,7 @@
 ## M7 部署上线
 
 - [ ] **T7.1 Supabase 准备**：确认 eu-west-1 项目、Session Pooler（:5432）连通性；**部署前重置数据库密码**（文档 7.3 明文密码不入库）
-- [ ] **T7.2 迁移执行**：golang-migrate 通过 `DATABASE_URL` 在 CI 或本地执行（含超管 seed）
+- [ ] **T7.2 迁移执行**：golang-migrate 通过 `DATABASE_URL` 执行（含超管 seed）。**时机约定：Render 免费档部署不跑迁移，须在每次 push 触发自动部署前手动/CI 执行 `migrate up`**，避免"新表未建、服务已上线"窗口；新增迁移文件时同步更新此操作习惯
 - [ ] **T7.3 render.yaml**：frankfurt / free / docker / `healthCheckPath: /api/v1/healthz`；`DATABASE_URL` 手动录入（sync: false）、`JWT_SECRET` 自动生成、`TZ=Asia/Shanghai`
 - [ ] **T7.4 绑定 GitHub 仓库**，push 自动构建；确认 Go 监听 `$PORT`
 - [ ] **T7.5 静态路由验证**：`/api/*` → API；`/admin*` → admin SPA；其余 → h5 SPA（含 SPA fallback）
@@ -239,4 +241,4 @@
 - [ ] **A1 单元测试**：时间规则引擎全覆盖；核销/登记分支矩阵；违约推导口径
 - [ ] **A2 集成测试**：报名并发（FOR UPDATE）、核销幂等、点评校验链
 - [ ] **A3 错误码登记**：每新增一个错误码同步更新 api-client 与前端提示
-- [ ] **A4 安全自查**：SQL 参数化（sqlc）、日志无明文密码、越权路径（角色中间件覆盖所有 /admin、/super 路由）
+- [ ] **A4 安全与非功能自查**（对齐 sheji.md §8 全部 8 项）：SQL 参数化（sqlc）、日志无明文密码、越权路径（角色中间件覆盖所有 /admin、/super 路由）、隐私自查（无手机号字段、无手机号展示、员工列表仅工号/姓名/部门）、输入校验（后端 validator 标签 + 前端校验双端生效，日期统一 `YYYY-MM-DD`）

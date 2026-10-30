@@ -75,6 +75,11 @@ async function onLogin() {
     localStorage.setItem('canteen_role', data.user.role)
     localStorage.setItem('canteen_name', data.user.name)
     ElMessage.success('登录成功')
+    // 首登/被重置：立即进入改密页（所有菜单操作都会被拦截，无需逐个提示）
+    if (data.user.must_change_password) {
+      setTimeout(() => router.push('/password'), 800)
+      return
+    }
     if (data.user.role === 'employee') {
       setTimeout(() => {
         window.location.href = '/'

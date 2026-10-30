@@ -36,10 +36,11 @@ const allMenus = [
   { path: '/verify', menu: '现场核销', role: 'canteen_admin' },
   { path: '/menus/publish', menu: '菜谱发布', role: 'canteen_admin' },
   { path: '/menus/items', menu: '菜品下架', role: 'canteen_admin' },
-  { path: '/employees', menu: '员工管理', role: 'canteen_admin' },
   { path: '/verify-rules', menu: '核销规则', role: 'canteen_admin' },
   { path: '/statistics', menu: '数据统计', role: 'canteen_admin' },
   { path: '/suggestions', menu: '建议管理', role: 'canteen_admin' },
+  // 员工管理归超管（需求变更）
+  { path: '/employees', menu: '员工管理', role: 'super_admin' },
   { path: '/super/users', menu: '账号管理', role: 'super_admin' },
   { path: '/super/violations', menu: '违约查看', role: 'super_admin' },
   { path: '/super/dashboard', menu: '数据看板', role: 'super_admin' },

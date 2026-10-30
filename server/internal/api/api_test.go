@@ -694,7 +694,18 @@ func TestStats(t *testing.T) {
 
 func TestEmployeeImport(t *testing.T) {
 	e := newTestEnv(t)
+	// 员工管理是超管专属：食堂管理员调用应被拒
 	caTok := e.login(t, "CA01", "ca123456", false)
+	code, out := e.do(t, "GET", "/api/v1/admin/employees", caTok, nil)
+	if code != 403 {
+		t.Fatalf("canteen admin should NOT access employees: %d %v", code, out)
+	}
+	// 超管可访问
+	superTok := e.login(t, "admin", "admin123", false)
+	code, out = e.do(t, "GET", "/api/v1/admin/employees", superTok, nil)
+	if code != 200 {
+		t.Fatalf("super admin should access employees: %d %v", code, out)
+	}
 
 	csvContent := "工号,姓名,部门\nE100,赵六,生产部\n,E007,空工号\nE100,重复,生产部\nE101,钱七,\n"
 	body := &bytes.Buffer{}
@@ -705,15 +716,15 @@ func TestEmployeeImport(t *testing.T) {
 
 	req, _ := http.NewRequest("POST", e.ts.URL+"/api/v1/admin/employees/import", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Authorization", "Bearer "+caTok)
+	req.Header.Set("Authorization", "Bearer "+superTok)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
-	var out map[string]any
-	_ = json.NewDecoder(resp.Body).Decode(&out)
-	data := out["data"].(map[string]any)
+	var importOut map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&importOut)
+	data := importOut["data"].(map[string]any)
 	if data["success_count"].(float64) != 2 {
 		t.Fatalf("expect 2 success: %v", data)
 	}

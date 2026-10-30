@@ -412,9 +412,9 @@ values ('admin', 'admin', '', '<bcrypt(admin123)>', 'super_admin');
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET/POST | `/admin/employees` | 员工列表 / 手动添加 |
-| POST | `/admin/employees/import` | Excel/CSV 批量导入（逐行校验，返回成功/失败明细） |
-| PATCH | `/admin/employees/:id` | 编辑（仅姓名、部门，工号不可改） |
+| GET/POST | `/admin/employees` | 员工列表 / 手动添加（**仅超管**；需求变更：员工账号管理归超管） |
+| POST | `/admin/employees/import` | CSV 批量导入（逐行校验，返回成功/失败明细；**仅超管**） |
+| PATCH | `/admin/employees/:id` | 编辑（仅姓名、部门，工号不可改；**仅超管**） |
 | POST | `/admin/menus` | 发布菜谱（一次可提交多天多餐：`[{menu_date, meal, dishes: [{dish_name, taste_tags}]}]`；单事务处理：日期越界整批拒绝，同餐同名冲突行跳过并返回明细） |
 | GET | `/admin/menus/copy-last-week` | 返回上周菜单模板（按星期几+餐次组织，不绑定目标日期） |
 | PATCH | `/admin/menu-items/:id/shelf` | 下架 / 恢复 |
@@ -502,21 +502,22 @@ values ('admin', 'admin', '', '<bcrypt(admin123)>', 'super_admin');
 | 现场核销 | `/verify` | 工号输入框（自动聚焦）→ 显示当餐记录 → [核销] / [登记未报名就餐] |
 | 菜谱发布 | `/menus/publish` | 周视图选择 + 菜品编辑（添加行：菜名+口味标签）+ [复制上周] |
 | 菜品下架 | `/menus/items` | 按日期餐次列出菜品，[下架]/[恢复] 开关 |
-| 员工管理 | `/employees` | 表格 + 手动添加 + Excel/CSV 导入（结果明细弹窗）+ 编辑（姓名/部门） |
 | 核销规则 | `/verify-rules` | 三餐核销截止时间（默认值占位，可覆盖保存） |
 | 数据统计 | `/statistics` | 日期筛选：餐次报名数 / 部门分布 / 差异表 + ECharts 图 |
 | 建议管理 | `/suggestions` | 列表 + 状态标记（待处理/已采纳/已拒绝） |
-| 修改密码 | `/password` | 旧密码+新密码；所有角色（含超管）个人中心入口，首登 `must_change_password` 强制跳转此页 |
+| 修改密码 | `/password` | 旧密码+新密码；所有角色（含超管）个人中心入口 |
 
-**超级管理员附加菜单**：
+**超级管理员菜单**（不包含食堂管理员的核销/菜谱/统计等页面）：
 
 | 菜单 | 路径 | 页面要点 |
 |---|---|---|
+| 员工管理 | `/employees` | 表格 + 手动添加 + CSV 导入（结果明细弹窗）+ 编辑（姓名/部门） |
 | 账号管理 | `/super/users` | 食堂管理员创建/列表、员工与食堂管理员禁用/启用、重置密码 |
 | 违约查看 | `/super/violations` | 违约名单表格（姓名、部门、违约次数、明细） |
 | 数据看板 | `/super/dashboard` | 趋势折线、菜品赞踩排行、未到率、部门对比（ECharts） |
+| 修改密码 | `/password` | 所有角色通用 |
 
-**路由守卫**：`beforeEach` 校验 token 与角色；`must_change_password` 状态强制跳改密页。
+**登录落点与强制改密**：登录响应携带 `must_change_password`——为 true 时前端**立即跳改密页**（不依赖后续 API 的 403 拦截）；角色不匹配的页面访问由守卫重定向回本角色首页（食堂管理员→`/verify`，超管→`/super/users`）。员工账号在管理端 URL 登录时整页跳转员工端。
 
 ### 6.3 共享 api-client（packages/api-client）
 

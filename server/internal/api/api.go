@@ -52,10 +52,11 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /api/v1/my/suggestions", require(http.HandlerFunc(s.mySuggestions), "employee"))
 
 	// 食堂管理员端
-	mux.Handle("GET /api/v1/admin/employees", require(http.HandlerFunc(s.listEmployees), "canteen_admin"))
-	mux.Handle("POST /api/v1/admin/employees", require(http.HandlerFunc(s.addEmployee), "canteen_admin"))
-	mux.Handle("POST /api/v1/admin/employees/import", require(http.HandlerFunc(s.importEmployees), "canteen_admin"))
-	mux.Handle("PATCH /api/v1/admin/employees/{id}", require(http.HandlerFunc(s.editEmployee), "canteen_admin"))
+	// 员工账号管理：仅超级管理员（需求变更：食堂管理员不再管理员工账号）
+	mux.Handle("GET /api/v1/admin/employees", require(http.HandlerFunc(s.listEmployees), "super_admin"))
+	mux.Handle("POST /api/v1/admin/employees", require(http.HandlerFunc(s.addEmployee), "super_admin"))
+	mux.Handle("POST /api/v1/admin/employees/import", require(http.HandlerFunc(s.importEmployees), "super_admin"))
+	mux.Handle("PATCH /api/v1/admin/employees/{id}", require(http.HandlerFunc(s.editEmployee), "super_admin"))
 	mux.Handle("POST /api/v1/admin/menus", require(http.HandlerFunc(s.publishMenu), "canteen_admin"))
 	mux.Handle("GET /api/v1/admin/menus/copy-last-week", require(http.HandlerFunc(s.copyLastWeek), "canteen_admin"))
 	mux.Handle("PATCH /api/v1/admin/menu-items/{id}/shelf", require(http.HandlerFunc(s.shelfMenuItem), "canteen_admin"))

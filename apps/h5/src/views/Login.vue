@@ -81,6 +81,11 @@ async function onSubmit() {
     localStorage.setItem('canteen_role', data.user.role)
     localStorage.setItem('canteen_name', data.user.name)
     setTimeout(() => {
+      // 首登/被重置：立即进入改密页
+      if (data.user.must_change_password) {
+        router.push('/my/password')
+        return
+      }
       if (data.user.role === 'super_admin' || data.user.role === 'canteen_admin') {
         // /admin/ 是独立 SPA，必须整页导航（router.push 只会匹配 h5 自己的路由）
         window.location.href = '/admin/'

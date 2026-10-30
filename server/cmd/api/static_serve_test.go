@@ -3,17 +3,39 @@ package main
 import (
 	"io/fs"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
+// 从 admin/index.html 提取引用的 JS 文件名（构建哈希会变，不能硬编码）。
+func adminMainJS(t *testing.T, sub fs.FS) string {
+	t.Helper()
+	html, err := fs.ReadFile(sub, "admin/index.html")
+	if err != nil {
+		t.Fatalf("read admin/index.html: %v", err)
+	}
+	s := string(html)
+	marker := `/admin/assets/index-`
+	i := strings.Index(s, marker)
+	if i < 0 {
+		t.Fatalf("no admin js reference in index.html: %s", s)
+	}
+	rest := s[i+len(marker):]
+	end := strings.Index(rest, `"`)
+	if end < 0 {
+		t.Fatalf("bad js reference in index.html")
+	}
+	return "admin/assets/index-" + rest[:end]
+}
+
 // 验证静态处理：embed 数据完整 + handler 输出完整（带正确 MIME）。
 func TestStaticServing(t *testing.T) {
-	// 1. embed 数据完整
 	sub, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := fs.ReadFile(sub, "admin/assets/index-C37WbOfA.js")
+	adminJS := adminMainJS(t, sub)
+	b, err := fs.ReadFile(sub, adminJS)
 	if err != nil {
 		t.Fatalf("embed read admin js: %v", err)
 	}
@@ -21,20 +43,18 @@ func TestStaticServing(t *testing.T) {
 		t.Fatalf("embedded admin js too small: %d", len(b))
 	}
 
-	// 2. handler 输出完整 + 正确 MIME
+	// handler 输出完整 + 正确 MIME
 	h := staticHandler()
 	for _, tc := range []struct {
 		path     string
 		wantCT   string
 		minBytes int
 	}{
-		{"/admin/assets/index-C37WbOfA.js", "text/javascript", 1000},
-		{"/assets/index-DrCBm0KI.js", "text/javascript", 1000},
+		{"/" + adminJS, "text/javascript", 1000},
 		{"/assets/index-Bh_c2dMR.css", "text/css", 1000},
-		{"/admin/assets/index-WxHCO0OI.css", "text/css", 1000},
-		{"/", "text/html", 200},
 		{"/admin/", "text/html", 200},
 		{"/admin/verify", "text/html", 200},
+		{"/", "text/html", 200},
 		{"/my/records", "text/html", 200},
 	} {
 		rec := httptest.NewRecorder()

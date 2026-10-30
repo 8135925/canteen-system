@@ -9,14 +9,22 @@ const router = createRouter({
       path: '/',
       component: () => import('../layouts/AdminLayout.vue'),
       children: [
-        { path: '', redirect: '/verify' },
+        {
+          path: '',
+          // 按角色落到首页：食堂管理员→现场核销，超管→账号管理
+          redirect: () => {
+            const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('canteen_role') || ''
+            return role === 'super_admin' ? '/super/users' : '/verify'
+          },
+        },
         { path: 'verify', component: () => import('../views/Verify.vue'), meta: { menu: '现场核销', roles: ['canteen_admin'] } },
         { path: 'menus/publish', component: () => import('../views/MenuPublish.vue'), meta: { menu: '菜谱发布', roles: ['canteen_admin'] } },
         { path: 'menus/items', component: () => import('../views/MenuItemShelf.vue'), meta: { menu: '菜品下架', roles: ['canteen_admin'] } },
-        { path: 'employees', component: () => import('../views/Employees.vue'), meta: { menu: '员工管理', roles: ['canteen_admin'] } },
         { path: 'verify-rules', component: () => import('../views/VerifyRules.vue'), meta: { menu: '核销规则', roles: ['canteen_admin'] } },
         { path: 'statistics', component: () => import('../views/Statistics.vue'), meta: { menu: '数据统计', roles: ['canteen_admin'] } },
         { path: 'suggestions', component: () => import('../views/Suggestions.vue'), meta: { menu: '建议管理', roles: ['canteen_admin'] } },
+        // 员工管理：仅超管（需求变更）
+        { path: 'employees', component: () => import('../views/Employees.vue'), meta: { menu: '员工管理', roles: ['super_admin'] } },
         { path: 'password', component: () => import('../views/Password.vue'), meta: { menu: '修改密码' } },
         { path: 'super/users', component: () => import('../views/super/Users.vue'), meta: { menu: '账号管理', roles: ['super_admin'] } },
         { path: 'super/violations', component: () => import('../views/super/Violations.vue'), meta: { menu: '违约查看', roles: ['super_admin'] } },
@@ -31,11 +39,12 @@ router.beforeEach((to) => {
   if (to.path === '/login') return true
   if (!getToken()) return '/login'
   const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('canteen_role') || ''
-  // 超管拥有管理端全部页面的访问权
-  if (role === 'super_admin') return true
   const roles = to.meta.roles as string[] | undefined
   if (roles && roles.length > 0 && !roles.includes(role)) {
-    return role === 'canteen_admin' ? '/verify' : '/login'
+    // 角色不匹配：回到自己角色对应的首页
+    if (role === 'super_admin') return '/super/users'
+    if (role === 'canteen_admin') return '/verify'
+    return '/login'
   }
   return true
 })

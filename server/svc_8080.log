@@ -1,0 +1,3 @@
+{"time":"2026-10-30T09:45:38.1754795+08:00","level":"INFO","msg":"migrations applied"}
+{"time":"2026-10-30T09:45:38.1996338+08:00","level":"INFO","msg":"server listening","addr":"0.0.0.0:8080"}
+{"time":"2026-10-30T09:45:38.1996338+08:00","level":"ERROR","msg":"server error","err":"listen tcp 0.0.0.0:8080: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}

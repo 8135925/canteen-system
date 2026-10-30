@@ -61,7 +61,13 @@ func main() {
 
 	addr := "0.0.0.0:" + cfg.Port
 	slog.Info("server listening", "addr", addr)
-	if err := http.ListenAndServe(addr, logMiddleware(mux)); err != nil {
+	httpSrv := &http.Server{
+		Addr:              addr,
+		Handler:           logMiddleware(mux),
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       55 * time.Second, // 主动关闭闲置 keep-alive 连接，避免浏览器复用半开死连接
+	}
+	if err := httpSrv.ListenAndServe(); err != nil {
 		slog.Error("server error", "err", err)
 		os.Exit(1)
 	}
@@ -158,6 +164,8 @@ func serveIndex(fsys fs.FS, name string, w http.ResponseWriter, r *http.Request)
 		httpx.FailWith(w, httpx.CodeNotFound, "frontend not built")
 		return
 	}
+	// index.html 禁止缓存：确保前端更新后浏览器总拿到最新引用的资源哈希
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(data)
 }

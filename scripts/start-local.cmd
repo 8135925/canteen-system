@@ -1,6 +1,6 @@
 @echo off
-rem 本地启动：单端口 8080 提供全部功能（H5 + 管理端 + API，连接 Supabase）
-rem 窗口关闭即服务停止
+rem Start local service on port 8080 (H5 + admin + API, Supabase DB).
+rem Close this window to stop the service.
 cd /d %~dp0..\server
 set PORT=8080
 set AUTO_MIGRATE=1

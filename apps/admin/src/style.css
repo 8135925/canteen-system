@@ -1,0 +1,53 @@
+/* 全局风格（对齐 vue-pure-admin 设计语言） */
+
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #f0f2f5;
+}
+
+/* 卡片内标题：主色左侧强调条（pure-admin 风格） */
+.el-card h3 {
+  display: flex;
+  align-items: center;
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #303133;
+}
+.el-card h3::before {
+  content: '';
+  width: 3px;
+  height: 15px;
+  background: #409eff;
+  border-radius: 2px;
+  margin-right: 8px;
+}
+.el-card h4 {
+  margin: 18px 0 10px;
+  font-size: 14px;
+  color: #303133;
+}
+
+/* 表格：表头浅灰底、行 hover */
+.el-table {
+  --el-table-header-bg-color: #f5f7fa;
+  --el-table-header-text-color: #606266;
+  font-size: 13.5px;
+}
+.el-table th.el-table__cell {
+  font-weight: 600;
+}
+
+/* 分页右置 */
+.el-pagination {
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+/* 表单标题间距 */
+.el-form-item {
+  margin-bottom: 16px;
+}

@@ -100,7 +100,8 @@ function weekdayName(w: number) {
 const selectedDate = ref(fmt(new Date()))
 const mealTab = ref('lunch')
 const allDishes = ref<Dish[]>([])
-const mySignups = ref<Record<string, string>>({}) // meal -> status
+// 报名状态按 日期 → 餐次 二维存储，避免某天的状态串到其它日期
+const mySignups = ref<Record<string, Record<string, string>>>({})
 const myReviews = ref<Record<string, number>>({})
 
 const isToday = computed(() => selectedDate.value === fmt(new Date()))
@@ -123,13 +124,19 @@ async function loadMenus() {
 }
 
 async function loadMySignups() {
-  if (!getToken()) return
+  // 报名记录接口仅员工角色可用，管理员/超管在 h5 首页不调用（避免 403 报错）
+  if (!getToken() || !isEmployee.value) return
   try {
-    const data = await get('/my/signups', { from: selectedDate.value, to: selectedDate.value })
-    mySignups.value = {}
+    // 一次拉取未来 15 天，按日期归档
+    const from = fmt(new Date())
+    const to = fmt(new Date(Date.now() + 14 * 86400000))
+    const data = await get('/my/signups', { from, to })
+    const map: Record<string, Record<string, string>> = {}
     for (const r of (data.records || []) as SignupView[]) {
-      mySignups.value[r.meal] = r.status
+      map[r.menu_date] = map[r.menu_date] || {}
+      map[r.menu_date][r.meal] = r.status
     }
+    mySignups.value = map
   } catch {
     /* 未登录等场景忽略 */
   }
@@ -139,10 +146,11 @@ function dishesOf(meal: string): Dish[] {
   return allDishes.value.filter((d) => d.menu_date === selectedDate.value && d.meal === meal)
 }
 
-// 报名状态机：已过当日 00:00 → locked（已锁定）
+// 报名状态机：已过当日 00:00 → locked（已锁定）；各日期独立取自己的状态
 function signupState(meal: string): string {
   if (selectedDate.value <= fmt(new Date())) return 'locked'
-  return mySignups.value[meal] === 'signed' ? 'signed' : 'none'
+  const st = mySignups.value[selectedDate.value]?.[meal]
+  return st === 'signed' ? 'signed' : 'none'
 }
 
 function signupButtonText(meal: string) {

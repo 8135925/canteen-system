@@ -52,6 +52,9 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /api/v1/my/suggestions", require(http.HandlerFunc(s.mySuggestions), "employee"))
 
 	// 食堂管理员端
+	// 欢迎首页聚合（食堂管理员 + 超管）
+	mux.Handle("GET /api/v1/admin/welcome", require(http.HandlerFunc(s.welcomeStats), "canteen_admin", "super_admin"))
+
 	// 员工账号管理：仅超级管理员（需求变更：食堂管理员不再管理员工账号）
 	mux.Handle("GET /api/v1/admin/employees", require(http.HandlerFunc(s.listEmployees), "super_admin"))
 	mux.Handle("POST /api/v1/admin/employees", require(http.HandlerFunc(s.addEmployee), "super_admin"))
@@ -62,9 +65,12 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("PATCH /api/v1/admin/menu-items/{id}/shelf", require(http.HandlerFunc(s.shelfMenuItem), "canteen_admin"))
 	mux.Handle("GET /api/v1/admin/verify-rules", require(http.HandlerFunc(s.listVerifyRules), "canteen_admin"))
 	mux.Handle("PUT /api/v1/admin/verify-rules", require(http.HandlerFunc(s.updateVerifyRules), "canteen_admin"))
-	mux.Handle("GET /api/v1/admin/stats/signups", require(http.HandlerFunc(s.statsSignups), "canteen_admin"))
-	mux.Handle("GET /api/v1/admin/stats/departments", require(http.HandlerFunc(s.statsDepartments), "canteen_admin"))
-	mux.Handle("GET /api/v1/admin/stats/daily", require(http.HandlerFunc(s.statsDaily), "canteen_admin"))
+	// 统计接口：食堂管理员 + 超管（欢迎首页数据源，超管也可见）
+	mux.Handle("GET /api/v1/admin/stats/signups", require(http.HandlerFunc(s.statsSignups), "canteen_admin", "super_admin"))
+	mux.Handle("GET /api/v1/admin/stats/departments", require(http.HandlerFunc(s.statsDepartments), "canteen_admin", "super_admin"))
+	mux.Handle("GET /api/v1/admin/stats/daily", require(http.HandlerFunc(s.statsDaily), "canteen_admin", "super_admin"))
+	// 某天用餐明细分页（谁报名来没来/没报名来吃了/没报名没来）
+	mux.Handle("GET /api/v1/admin/stats/attendance-detail", require(http.HandlerFunc(s.attendanceDetail), "canteen_admin", "super_admin"))
 	mux.Handle("GET /api/v1/admin/verify/lookup", require(http.HandlerFunc(s.verifyLookup), "canteen_admin"))
 	mux.Handle("POST /api/v1/admin/verify", require(http.HandlerFunc(s.doVerify), "canteen_admin"))
 	mux.Handle("POST /api/v1/admin/walk-in", require(http.HandlerFunc(s.walkIn), "canteen_admin"))

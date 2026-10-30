@@ -422,6 +422,7 @@ values ('admin', 'admin', '', '<bcrypt(admin123)>', 'super_admin');
 | GET | `/admin/stats/signups?date=` | 按餐次报名人数 |
 | GET | `/admin/stats/departments?date=` | 按部门报名分布 |
 | GET | `/admin/stats/daily?from=&to=` | 核销数+未报名数 vs 报名数差异 |
+| GET | `/admin/stats/attendance-detail?date=&dept=&keyword=&page=&page_size=` | 某天用餐明细分页：全员×三餐状态（已核销/报名未到/未报名就餐/已取消/未报名），支持部门与工号/姓名筛选——数据统计页"用餐明细"数据源 |
 | GET | `/admin/verify/lookup?emp_no=&menu_date=&meal=` | 核销前查询（menu_date 须为当日，拒绝未来/历史日期） |
 | POST | `/admin/verify` | 执行核销（menu_date 须为当日；须在核销截止前，过期返回 `VERIFY_CLOSED`） |
 | POST | `/admin/walk-in` | 未报名就餐登记（menu_date 须为当日，拒绝未来日期） |

@@ -690,6 +690,97 @@ func (s *Store) DailyTrend(from, to string) ([]store.DailyTrendRow, error) {
 	return out, nil
 }
 
+// AttendanceDetail 某天用餐明细分页（内存实现，按状态优先级合成）。
+func (s *Store) AttendanceDetail(date, dept, keyword string, page, pageSize int) ([]store.AttendanceRow, int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	prio := map[string]int{"verified": 1, "walk_in": 2, "no_show": 3, "signed": 4, "cancelled": 5}
+	// user -> meal -> best st
+	best := map[int64]map[string]string{}
+	consider := func(uid int64, meal, st string) {
+		if best[uid] == nil {
+			best[uid] = map[string]string{}
+		}
+		if cur, ok := best[uid][meal]; !ok || prio[st] < prio[cur] {
+			best[uid][meal] = st
+		}
+	}
+	// 报餐状态
+	for _, r := range s.signups {
+		if r.MenuDate != date {
+			continue
+		}
+		st := r.Status
+		if st == "signed" {
+			st = "no_show" // 简化：内存测试环境中签名行视为已过截止
+		}
+		consider(r.UserID, r.Meal, st)
+	}
+	// walk-in
+	for _, w := range s.walkIns {
+		if w.MenuDate != date {
+			continue
+		}
+		if cur, ok := best[w.UserID][w.Meal]; !ok || cur == "cancelled" {
+			consider(w.UserID, w.Meal, "walk_in")
+		}
+	}
+
+	var all []*store.User
+	for _, u := range s.users {
+		if u.Role != "employee" {
+			continue
+		}
+		if dept != "" && u.Department != dept {
+			continue
+		}
+		if keyword != "" && !strings.Contains(u.EmpNo, keyword) && !strings.Contains(u.Name, keyword) {
+			continue
+		}
+		all = append(all, u)
+	}
+	sort.Slice(all, func(i, j int) bool { return all[i].EmpNo < all[j].EmpNo })
+	total := int64(len(all))
+
+	start := (page - 1) * pageSize
+	if start > len(all) {
+		start = len(all)
+	}
+	end := start + pageSize
+	if end > len(all) {
+		end = len(all)
+	}
+	var out []store.AttendanceRow
+	for _, u := range all[start:end] {
+		row := store.AttendanceRow{
+			UserID: u.ID, EmpNo: u.EmpNo, Name: u.Name,
+			Department: u.Department, UserStatus: u.Status,
+		}
+		if m := best[u.ID]; m != nil {
+			row.Breakfast = m["breakfast"]
+			row.Lunch = m["lunch"]
+			row.Dinner = m["dinner"]
+		}
+		out = append(out, row)
+	}
+	return out, total, nil
+}
+
+// DishSatisfaction 全量赞踩汇总（内存实现）。
+func (s *Store) DishSatisfaction() (likeCount, dislikeCount int64, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, r := range s.reviews {
+		if r.Rating == 1 {
+			likeCount++
+		} else {
+			dislikeCount++
+		}
+	}
+	return
+}
+
 func (s *Store) DishRanking(from, to string) ([]store.DishRankRow, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

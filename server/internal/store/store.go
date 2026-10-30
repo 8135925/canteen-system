@@ -227,6 +227,22 @@ type Store interface {
 	DishRanking(from, to string) ([]DishRankRow, error)
 	WasteRate(from, to string) ([]WasteRateRow, error)
 	DeptDining(from, to string) ([]DeptDiningRow, error)
+	DishSatisfaction() (likeCount, dislikeCount int64, err error)
+	AttendanceDetail(date, dept, keyword string, page, pageSize int) ([]AttendanceRow, int64, error)
+}
+
+// AttendanceRow 用餐明细行：某天某人在三餐上的状态。
+// 每餐取值：verified=报名已核销 / no_show=报名未到 / signed=已报名未到核销时点 /
+// cancelled=已取消 / walk_in=未报名就餐 / ""=未报名也未就餐。
+type AttendanceRow struct {
+	UserID     int64  `json:"user_id"`
+	EmpNo      string `json:"emp_no"`
+	Name       string `json:"name"`
+	Department string `json:"department"`
+	UserStatus string `json:"user_status"`
+	Breakfast  string `json:"breakfast"`
+	Lunch      string `json:"lunch"`
+	Dinner     string `json:"dinner"`
 }
 
 // ErrConflict 唯一约束冲突（幂等兜底场景）。

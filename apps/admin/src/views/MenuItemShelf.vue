@@ -4,21 +4,19 @@
       <h3>菜品下架 / 恢复</h3>
       <el-date-picker v-model="date" type="date" value-format="YYYY-MM-DD" @change="load" />
       <el-table :data="dishes" border style="margin-top: 12px">
-        <el-table-column prop="meal" label="餐次" width="100">
-          <template #default="{ row }">{{ mealLabel(row.meal) }}</template>
-        </el-table-column>
-        <el-table-column prop="dish_name" label="菜品" />
-        <el-table-column prop="taste_tags" label="口味" width="180">
+        <el-table-column prop="meal" label="餐次" width="90" align="center" />
+        <el-table-column prop="dish_name" label="菜品" min-width="180" show-overflow-tooltip />
+        <el-table-column label="口味" min-width="140">
           <template #default="{ row }">{{ (row.taste_tags || []).join('、') }}</template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="120">
+        <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 'normal' ? 'success' : 'danger'">
               {{ row.status === 'normal' ? '正常' : '已下架' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="140">
+        <el-table-column label="操作" width="170" align="center">
           <template #default="{ row }">
             <el-switch
               :model-value="row.status === 'normal'"

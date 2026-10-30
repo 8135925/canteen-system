@@ -726,6 +726,99 @@ func (s *Store) DailyTrend(from, to string) ([]store.DailyTrendRow, error) {
 	return out, rows.Err()
 }
 
+// AttendanceDetail 某天用餐明细分页：全员 × 三餐状态（含未报名未就餐的人）。
+// 每餐状态优先级：verified(1) > walk_in(2) > no_show(3) > signed(4) > cancelled(5)。
+func (s *Store) AttendanceDetail(date, dept, keyword string, page, pageSize int) ([]store.AttendanceRow, int64, error) {
+	ctx := context.Background()
+	offset := (page - 1) * pageSize
+
+	rows, err := s.pool.Query(ctx, `
+		with rules as (
+		  select meal::text as meal, verify_deadline::text as dl from verify_rules
+		),
+		latest as (
+		  select distinct on (user_id, meal)
+		         user_id, meal::text as meal, status
+		  from meal_signups
+		  where menu_date = $1::date
+		  order by user_id, meal, signed_at desc, id desc
+		),
+		st as (
+		  select l.user_id, l.meal, l.status,
+		         case
+		           when l.status = 'verified' then 'verified'
+		           when l.status = 'signed' and
+		                (now() at time zone 'Asia/Shanghai')::time >
+		                coalesce(r.dl::time,
+		                  case l.meal when 'breakfast' then time '09:00'
+		                              when 'lunch' then time '13:30'
+		                              else time '19:00' end)
+		           then 'no_show'
+		           when l.status = 'signed' then 'signed'
+		           else 'cancelled'
+		         end as st,
+		         case
+		           when l.status = 'verified' then 1
+		           when l.status = 'signed' then 3
+		           else 5
+		         end as prio
+		  from latest l
+		  left join rules r on r.meal = l.meal
+		  union all
+		  select w.user_id, w.meal, 'walk_in' as status, 'walk_in' as st, 2 as prio
+		  from walk_in_records w
+		  where w.menu_date = $1::date
+		),
+		st_best as (
+		  select * from (
+		    select *, row_number() over (partition by user_id, meal order by prio) as rn
+		    from st
+		  ) t where t.rn = 1
+		)
+		select u.id, u.emp_no, u.name, u.department, u.status,
+		       coalesce(max(case when s.meal = 'breakfast' then s.st end), '') as breakfast,
+		       coalesce(max(case when s.meal = 'lunch' then s.st end), '') as lunch,
+		       coalesce(max(case when s.meal = 'dinner' then s.st end), '') as dinner,
+		       count(*) over () as total
+		from users u
+		left join st_best s on s.user_id = u.id
+		where u.role = 'employee'
+		  and ($2::text = '' or u.department = $2::text)
+		  and ($3::text = '' or u.emp_no ilike '%' || $3::text || '%' or u.name ilike '%' || $3::text || '%')
+		group by u.id, u.emp_no, u.name, u.department, u.status
+		order by u.emp_no
+		limit $4 offset $5`, date, dept, keyword, pageSize, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var out []store.AttendanceRow
+	var total int64
+	for rows.Next() {
+		var r store.AttendanceRow
+		if err := rows.Scan(&r.UserID, &r.EmpNo, &r.Name, &r.Department, &r.UserStatus,
+			&r.Breakfast, &r.Lunch, &r.Dinner, &total); err != nil {
+			return nil, 0, err
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	return out, total, nil
+}
+
+// DishSatisfaction 全量菜品赞踩汇总（满意度 = 赞 / (赞+踩)）。
+func (s *Store) DishSatisfaction() (likeCount, dislikeCount int64, err error) {
+	ctx := context.Background()
+	err = s.pool.QueryRow(ctx,
+		`select coalesce(sum(case when rating = 1 then 1 else 0 end), 0),
+		        coalesce(sum(case when rating = -1 then 1 else 0 end), 0)
+		 from dish_reviews`).Scan(&likeCount, &dislikeCount)
+	return
+}
+
 func (s *Store) DishRanking(from, to string) ([]store.DishRankRow, error) {
 	ctx := context.Background()
 	rows, err := s.pool.Query(ctx, `

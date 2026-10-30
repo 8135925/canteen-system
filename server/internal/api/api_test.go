@@ -688,6 +688,76 @@ func TestStats(t *testing.T) {
 	if codeOf(t, out) != httpx.CodeOK {
 		t.Fatalf("dept dashboard should ok: %v", out)
 	}
+
+	// 欢迎首页聚合（食堂管理员与超管均可）
+	_, out = e.do(t, "GET", "/api/v1/admin/welcome", caTok, nil)
+	if codeOf(t, out) != httpx.CodeOK {
+		t.Fatalf("welcome (canteen admin) should ok: %v", out)
+	}
+	wd := out["data"].(map[string]any)
+	for _, k := range []string{"today_signup", "month_noshow", "satisfaction", "trend", "rates", "latest_suggestions"} {
+		if _, ok := wd[k]; !ok {
+			t.Fatalf("welcome missing key %s: %v", k, wd)
+		}
+	}
+	_, out = e.do(t, "GET", "/api/v1/admin/welcome", e.login(t, "admin", "admin123", false), nil)
+	if codeOf(t, out) != httpx.CodeOK {
+		t.Fatalf("welcome (super admin) should ok: %v", out)
+	}
+	// 员工无权
+	empCode, _ := e.do(t, "GET", "/api/v1/admin/welcome", e.login(t, "E001", "123456", false), nil)
+	if empCode != 403 {
+		t.Fatalf("welcome expect 403 for employee: %d", empCode)
+	}
+
+	// 超管可访问统计接口（欢迎页数据源）
+	superTok := e.login(t, "admin", "admin123", false)
+	_, out = e.do(t, "GET", "/api/v1/admin/stats/signups?date="+todayStr(), superTok, nil)
+	if codeOf(t, out) != httpx.CodeOK {
+		t.Fatalf("super admin stats signups should ok: %v", out)
+	}
+	_, out = e.do(t, "GET", "/api/v1/admin/stats/daily?from="+todayStr()+"&to="+todayStr(), superTok, nil)
+	if codeOf(t, out) != httpx.CodeOK {
+		t.Fatalf("super admin stats daily should ok: %v", out)
+	}
+	// 员工仍无权
+	empCode, _ = e.do(t, "GET", "/api/v1/admin/stats/daily?from="+todayStr()+"&to="+todayStr(), e.login(t, "E001", "123456", false), nil)
+	if empCode != 403 {
+		t.Fatalf("stats expect 403 for employee: %d", empCode)
+	}
+
+	// 用餐明细：E001 早餐已核销、E002 未报名就餐、E003 完全无记录
+	_, out = e.do(t, "GET", "/api/v1/admin/stats/attendance-detail?date="+todayStr()+"&page=1&page_size=50", caTok, nil)
+	if codeOf(t, out) != httpx.CodeOK {
+		t.Fatalf("attendance detail should ok: %v", out)
+	}
+	attRows := out["data"].(map[string]any)["rows"].([]any)
+	byEmp := map[string]map[string]any{}
+	for _, r := range attRows {
+		rv := r.(map[string]any)
+		byEmp[rv["emp_no"].(string)] = rv
+	}
+	if r := byEmp["E001"]; r == nil || r["breakfast"] != "verified" {
+		t.Fatalf("E001 breakfast expect verified: %v", r)
+	}
+	if r := byEmp["E002"]; r == nil || r["breakfast"] != "walk_in" {
+		t.Fatalf("E002 breakfast expect walk_in: %v", r)
+	}
+	// E002 午餐：未报名也未就餐 → 空字符串
+	if r := byEmp["E002"]; r == nil || r["lunch"] != "" {
+		t.Fatalf("E002 lunch expect empty (未报名未就餐): %v", r)
+	}
+	// 关键字过滤
+	_, out = e.do(t, "GET", "/api/v1/admin/stats/attendance-detail?date="+todayStr()+"&keyword=E001", caTok, nil)
+	attRows = out["data"].(map[string]any)["rows"].([]any)
+	if len(attRows) != 1 {
+		t.Fatalf("keyword filter expect 1 row: %d", len(attRows))
+	}
+	// 员工无权
+	empCode, _ = e.do(t, "GET", "/api/v1/admin/stats/attendance-detail?date="+todayStr(), e.login(t, "E001", "123456", false), nil)
+	if empCode != 403 {
+		t.Fatalf("attendance detail expect 403 for employee: %d", empCode)
+	}
 }
 
 // —— 员工导入 ——

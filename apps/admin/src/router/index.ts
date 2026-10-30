@@ -9,14 +9,8 @@ const router = createRouter({
       path: '/',
       component: () => import('../layouts/AdminLayout.vue'),
       children: [
-        {
-          path: '',
-          // 按角色落到首页：食堂管理员→现场核销，超管→账号管理
-          redirect: () => {
-            const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('canteen_role') || ''
-            return role === 'super_admin' ? '/super/users' : '/verify'
-          },
-        },
+        { path: '', redirect: '/welcome' },
+        { path: 'welcome', component: () => import('../views/Welcome.vue'), meta: { menu: '首页', roles: ['canteen_admin', 'super_admin'] } },
         { path: 'verify', component: () => import('../views/Verify.vue'), meta: { menu: '现场核销', roles: ['canteen_admin'] } },
         { path: 'menus/publish', component: () => import('../views/MenuPublish.vue'), meta: { menu: '菜谱发布', roles: ['canteen_admin'] } },
         { path: 'menus/items', component: () => import('../views/MenuItemShelf.vue'), meta: { menu: '菜品下架', roles: ['canteen_admin'] } },
@@ -41,10 +35,8 @@ router.beforeEach((to) => {
   const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('canteen_role') || ''
   const roles = to.meta.roles as string[] | undefined
   if (roles && roles.length > 0 && !roles.includes(role)) {
-    // 角色不匹配：回到自己角色对应的首页
-    if (role === 'super_admin') return '/super/users'
-    if (role === 'canteen_admin') return '/verify'
-    return '/login'
+    // 角色不匹配：回首页（首页对所有管理角色开放）
+    return '/welcome'
   }
   return true
 })

@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@canteen/api-client": "workspace:*",
+    "@element-plus/icons-vue": "^2.3.2",
     "echarts": "^5.5.0",
     "element-plus": "^2.8.0",
     "vue": "^3.4.0",

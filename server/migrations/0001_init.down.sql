@@ -1,0 +1,10 @@
+drop table if exists suggestions;
+drop table if exists dish_reviews;
+drop table if exists walk_in_records;
+drop table if exists verifications;
+drop table if exists meal_signups;
+drop table if exists verify_rules;
+drop table if exists menu_items;
+drop table if exists users;
+drop type if exists meal_type;
+drop type if exists user_role;

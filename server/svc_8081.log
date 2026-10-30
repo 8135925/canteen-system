@@ -1,0 +1,32 @@
+{"time":"2026-10-29T22:31:15.3023696+08:00","level":"INFO","msg":"migrations applied"}
+{"time":"2026-10-29T22:31:15.3268039+08:00","level":"INFO","msg":"server listening","addr":"0.0.0.0:8081"}
+{"time":"2026-10-29T22:31:21.5487242+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/healthz","remote":"[::1]:13077","cost_ms":401}
+{"time":"2026-10-29T22:31:21.9998346+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":450}
+{"time":"2026-10-29T22:31:22.254729+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":254}
+{"time":"2026-10-29T22:31:22.8772635+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/me","remote":"[::1]:13077","cost_ms":621}
+{"time":"2026-10-29T22:31:23.0810975+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/me","remote":"[::1]:13077","cost_ms":202}
+{"time":"2026-10-29T22:31:23.331915+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":250}
+{"time":"2026-10-29T22:31:23.5819877+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":249}
+{"time":"2026-10-29T22:31:23.7925271+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/me","remote":"[::1]:13077","cost_ms":209}
+{"time":"2026-10-29T22:31:24.2017515+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/super/canteen-admins","remote":"[::1]:13077","cost_ms":409}
+{"time":"2026-10-29T22:31:24.4626385+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":260}
+{"time":"2026-10-29T22:31:24.864555+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/me","remote":"[::1]:13077","cost_ms":401}
+{"time":"2026-10-29T22:31:25.11357+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":249}
+{"time":"2026-10-29T22:31:25.3626693+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":248}
+{"time":"2026-10-29T22:31:25.5639747+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/me","remote":"[::1]:13077","cost_ms":201}
+{"time":"2026-10-29T22:31:25.5639747+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/admin/employees","remote":"[::1]:13077","cost_ms":0}
+{"time":"2026-10-29T22:31:25.8134079+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/auth/login","remote":"[::1]:13077","cost_ms":248}
+{"time":"2026-10-29T22:31:26.2363534+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/me","remote":"[::1]:13077","cost_ms":422}
+{"time":"2026-10-29T22:31:27.3000282+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/admin/menus","remote":"[::1]:13077","cost_ms":1028}
+{"time":"2026-10-29T22:31:27.7264596+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/menus","remote":"[::1]:13077","cost_ms":426}
+{"time":"2026-10-29T22:31:28.9495175+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/my/signups","remote":"[::1]:13077","cost_ms":1223}
+{"time":"2026-10-29T22:31:30.1935258+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/signups","remote":"[::1]:13077","cost_ms":1244}
+{"time":"2026-10-29T22:31:30.3938049+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/signups","remote":"[::1]:13077","cost_ms":200}
+{"time":"2026-10-29T22:31:30.9960291+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/admin/verify/lookup","remote":"[::1]:13077","cost_ms":602}
+{"time":"2026-10-29T22:31:31.4017688+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/admin/stats/signups","remote":"[::1]:13077","cost_ms":405}
+{"time":"2026-10-29T22:31:32.4362963+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/reviews","remote":"[::1]:13077","cost_ms":1034}
+{"time":"2026-10-29T22:31:32.8401047+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/admin/suggestions","remote":"[::1]:13077","cost_ms":403}
+{"time":"2026-10-29T22:31:33.6440079+08:00","level":"INFO","msg":"request","method":"PATCH","path":"/api/v1/admin/suggestions/1","remote":"[::1]:13077","cost_ms":803}
+{"time":"2026-10-29T22:31:34.048214+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/super/dashboard/trend","remote":"[::1]:13077","cost_ms":404}
+{"time":"2026-10-29T22:31:34.4655022+08:00","level":"INFO","msg":"request","method":"GET","path":"/api/v1/super/violations","remote":"[::1]:13077","cost_ms":417}
+{"time":"2026-10-29T22:31:34.4660297+08:00","level":"INFO","msg":"request","method":"POST","path":"/api/v1/admin/menus","remote":"[::1]:13077","cost_ms":0}

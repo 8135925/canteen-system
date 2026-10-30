@@ -1,0 +1,10 @@
+{
+  "name": "canteen-system",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "h5": "pnpm --filter @canteen/h5 dev",
+    "admin": "pnpm --filter @canteen/admin dev",
+    "build": "pnpm --filter @canteen/h5 build && pnpm --filter @canteen/admin build"
+  }
+}

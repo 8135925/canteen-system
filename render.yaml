@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: canteen-system
+    runtime: docker          # Dockerfile 位于仓库根，构建上下文即仓库根
+    plan: free
+    region: frankfurt        # 与 Supabase eu-west-1（爱尔兰）就近，降低 DB 往返延迟
+    healthCheckPath: /api/v1/healthz
+    envVars:
+      - key: DATABASE_URL    # Supabase Session Pooler 连接串（见 doc/sheji.md §7.3）
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TZ
+        value: Asia/Shanghai
+      - key: AUTO_MIGRATE    # 免费档无 CI：启动时自动执行迁移（幂等）
+        value: "1"

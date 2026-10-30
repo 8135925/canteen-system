@@ -1,0 +1,1 @@
+{"code":"OK","msg":"success","data":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEsInJvbGUiOiJzdXBlcl9hZG1pbiIsIm1jcCI6ZmFsc2UsImV4cCI6MTc5MzMyOTc0NSwiaWF0IjoxNzkzMjg2NTQ1fQ.Z8jNj7Uu7bRJs0L-FTm_Ko6Ki-URKVip5IO_TfR5aXU","user":{"department":"","emp_no":"admin","id":1,"must_change_password":false,"name":"admin","role":"super_admin"}}}

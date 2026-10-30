@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { put, setToken, getToken } from '@canteen/api-client'
+import { put, clearToken } from '@canteen/api-client'
 import { showToast } from 'vant'
 
 const router = useRouter()
@@ -37,15 +37,15 @@ async function onSubmit() {
   }
   loading.value = true
   try {
-    const data = await put<{ token: string }>('/my/password', {
+    await put<{ token: string }>('/my/password', {
       old_password: oldPwd.value,
       new_password: newPwd.value,
     })
-    // 重签的 mcp=false token
-    if (getToken()) setToken(data.token, !!localStorage.getItem('canteen_token'))
     sessionStorage.removeItem('must_change')
-    showToast('修改成功')
-    router.push('/menus')
+    showToast('修改成功，请重新登录')
+    // 注销并回登录页：用新密码重新登录
+    clearToken()
+    setTimeout(() => router.push('/login'), 600)
   } catch {
     /* 统一提示 */
   } finally {

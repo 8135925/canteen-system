@@ -17,8 +17,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { put, setToken } from '@canteen/api-client'
+import { useRouter } from 'vue-router'
+import { put, clearToken } from '@canteen/api-client'
 import { ElMessage } from 'element-plus'
+
+const router = useRouter()
 
 const oldPwd = ref('')
 const newPwd = ref('')
@@ -29,12 +32,17 @@ async function submit() {
     ElMessage.error('两次输入的新密码不一致')
     return
   }
-  const data = await put<{ token: string }>('/my/password', {
+  await put<{ token: string }>('/my/password', {
     old_password: oldPwd.value,
     new_password: newPwd.value,
   })
-  setToken(data.token, !!localStorage.getItem('canteen_token'))
-  ElMessage.success('修改成功')
-  oldPwd.value = newPwd.value = confirmPwd.value = ''
+  ElMessage.success('修改成功，请重新登录')
+  // 注销并回登录页：用新密码重新登录
+  clearToken()
+  sessionStorage.removeItem('canteen_role')
+  sessionStorage.removeItem('canteen_name')
+  localStorage.removeItem('canteen_role')
+  localStorage.removeItem('canteen_name')
+  router.push('/login')
 }
 </script>

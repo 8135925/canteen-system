@@ -73,7 +73,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		}
 		return u.Role, u.Status, u.MustChangePassword, nil
 	})
-	srv := NewServer(st, "test-secret", lookup, auth.NewLoginGuard())
+	srv := NewServer(st, "test-secret", lookup, auth.NewLoginGuard(), false)
 	ts := httptest.NewServer(srv.Handler())
 	t.Cleanup(ts.Close)
 	return &testEnv{ts: ts, st: st}
@@ -165,6 +165,41 @@ func TestLoginLockout(t *testing.T) {
 	code, out := e.do(t, "POST", "/api/v1/auth/login", "", map[string]any{"emp_no": "E001", "password": "123456"})
 	if codeOf(t, out) != httpx.CodeLocked {
 		t.Fatalf("expect LOCKED after 5 fails: %d %v", code, out)
+	}
+}
+
+// 演示模式：超管改密被拒（403），其它角色改密不受影响。
+func TestDemoModeAdminCannotChangePassword(t *testing.T) {
+	st := memory.New()
+	seedUser(st, t, "admin", "admin", "", "super_admin", "admin123")
+	seedUser(st, t, "E001", "张三", "生产部", "employee", "123456")
+	lookup := auth.NewUserLookup(func(uid int64) (string, string, bool, error) {
+		u, err := st.GetUserByID(uid)
+		if err != nil {
+			return "", "", false, err
+		}
+		return u.Role, u.Status, u.MustChangePassword, nil
+	})
+	srv := NewServer(st, "test-secret", lookup, auth.NewLoginGuard(), true)
+	ts := httptest.NewServer(srv.Handler())
+	defer ts.Close()
+	e := &testEnv{st: st, ts: ts}
+
+	superTok := e.login(t, "admin", "admin123", false)
+	code, out := e.do(t, "PUT", "/api/v1/my/password", superTok, map[string]any{"old_password": "admin123", "new_password": "whatever1"})
+	if code != 403 {
+		t.Fatalf("demo mode admin change password expect 403: %d %v", code, out)
+	}
+	// /me 携带 demo_mode 标记
+	_, out = e.do(t, "GET", "/api/v1/me", superTok, nil)
+	if me, ok := out["data"].(map[string]any); !ok || me["demo_mode"] != true {
+		t.Fatalf("me should carry demo_mode=true: %v", out)
+	}
+	// 员工改密不受影响
+	empTok := e.login(t, "E001", "123456", false)
+	code, out = e.do(t, "PUT", "/api/v1/my/password", empTok, map[string]any{"old_password": "123456", "new_password": "emp12345"})
+	if codeOf(t, out) != httpx.CodeOK {
+		t.Fatalf("employee change password should ok in demo mode: %v", out)
 	}
 }
 

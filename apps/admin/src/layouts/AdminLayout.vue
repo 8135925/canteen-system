@@ -49,7 +49,7 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="password">
+                <el-dropdown-item v-if="canChangePwd" command="password">
                   <el-icon><Key /></el-icon>修改密码
                 </el-dropdown-item>
                 <el-dropdown-item command="logout" divided>
@@ -89,14 +89,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Fold, Expand, ArrowDown, Close, Key, SwitchButton, HomeFilled,
   Tickets, Food, Sell, Stopwatch, DataAnalysis, ChatDotRound,
   UserFilled, Coin, TrendCharts, EditPen,
 } from '@element-plus/icons-vue'
-import { clearToken } from '@canteen/api-client'
+import { clearToken, get } from '@canteen/api-client'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
@@ -122,6 +122,19 @@ const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('can
 const menuItems = allMenus.filter((m) => !m.role || m.role === role)
 const userName = computed(() => sessionStorage.getItem('canteen_name') || localStorage.getItem('canteen_name') || '')
 const avatarChar = computed(() => (userName.value || '管').slice(0, 1))
+
+// 演示模式下超管密码固定 123123 且不可修改（后端同时拦截），隐藏改密菜单
+const demoMode = ref(false)
+const canChangePwd = computed(() => !(demoMode.value && role === 'super_admin'))
+
+onMounted(async () => {
+  try {
+    const me = await get('/me')
+    demoMode.value = !!me.demo_mode
+  } catch {
+    /* 未登录由守卫处理 */
+  }
+})
 
 /* 多标签页：记录访问过的菜单 */
 const tags = ref<{ path: string; menu: string }[]>([])

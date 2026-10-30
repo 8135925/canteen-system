@@ -12,14 +12,15 @@ import (
 )
 
 type Server struct {
-	St     store.Store
-	Secret string
-	Lookup *auth.UserLookup
-	Guard  *auth.LoginGuard
+	St       store.Store
+	Secret   string
+	Lookup   *auth.UserLookup
+	Guard    *auth.LoginGuard
+	DemoMode bool // 演示环境：超管密码固定且不可修改
 }
 
-func NewServer(st store.Store, secret string, lookup *auth.UserLookup, guard *auth.LoginGuard) *Server {
-	return &Server{St: st, Secret: secret, Lookup: lookup, Guard: guard}
+func NewServer(st store.Store, secret string, lookup *auth.UserLookup, guard *auth.LoginGuard, demoMode bool) *Server {
+	return &Server{St: st, Secret: secret, Lookup: lookup, Guard: guard, DemoMode: demoMode}
 }
 
 // Handler 组装全部路由（含认证/角色中间件）。

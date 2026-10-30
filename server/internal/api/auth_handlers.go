@@ -80,7 +80,10 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 		httpx.FailWith(w, httpx.CodeNotFound, "用户不存在")
 		return
 	}
-	httpx.OK(w, userView(u))
+	view := userView(u)
+	// 附加：演示模式（前端据此对超管隐藏改密入口）
+	view["demo_mode"] = s.DemoMode
+	httpx.OK(w, view)
 }
 
 type changePwdReq struct {
@@ -90,6 +93,11 @@ type changePwdReq struct {
 
 func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 	uid := auth.UID(r)
+	// 演示环境：超管账号密码固定（123123），不允许修改
+	if s.DemoMode && auth.RoleFrom(r) == "super_admin" {
+		httpx.FailWith(w, httpx.CodeForbidden, "演示环境不允许修改超管密码")
+		return
+	}
 	var req changePwdReq
 	if err := httpx.DecodeJSON(r, &req); err != nil || req.OldPassword == "" || req.NewPassword == "" {
 		httpx.FailWith(w, httpx.CodeBadRequest, "参数错误：old_password 与 new_password 必填")

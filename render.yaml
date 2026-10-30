@@ -14,3 +14,5 @@ services:
         value: Asia/Shanghai
       - key: AUTO_MIGRATE    # 免费档无 CI：启动时自动执行迁移（幂等）
         value: "1"
+      - key: DEMO_MODE       # 演示模式：超管密码固定 123123 且不可改；设 0 关闭
+        value: "1"

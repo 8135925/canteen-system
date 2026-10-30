@@ -11,6 +11,7 @@ type Config struct {
 	DatabaseURL string
 	JWTSecret   string
 	AutoMigrate bool // 本地开发 true：启动时自动执行迁移；生产用迁移命令执行
+	DemoMode    bool // 演示环境：默认 true。为 true 时超管 admin 密码固定 123123 且不可修改
 }
 
 func Load() (*Config, error) {
@@ -31,6 +32,8 @@ func Load() (*Config, error) {
 	}
 	am := os.Getenv("AUTO_MIGRATE")
 	cfg.AutoMigrate = am == "1" || am == "true"
+	dm := os.Getenv("DEMO_MODE")
+	cfg.DemoMode = dm != "0" && dm != "false" // 默认 true
 	return cfg, nil
 }
 

@@ -15,6 +15,7 @@ export interface LoginUser {
   department: string
   role: 'employee' | 'canteen_admin' | 'super_admin'
   must_change_password: boolean
+  demo_mode?: boolean
 }
 
 let onUnauthorized: () => void = () => {}

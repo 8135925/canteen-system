@@ -53,7 +53,7 @@ func main() {
 		}
 		return u.Role, u.Status, u.MustChangePassword, nil
 	})
-	srv := api.NewServer(st, cfg.JWTSecret, lookup, auth.NewLoginGuard())
+	srv := api.NewServer(st, cfg.JWTSecret, lookup, auth.NewLoginGuard(), cfg.DemoMode)
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", srv.Handler())

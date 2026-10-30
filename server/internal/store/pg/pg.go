@@ -765,7 +765,7 @@ func (s *Store) AttendanceDetail(date, dept, keyword string, page, pageSize int)
 		  from latest l
 		  left join rules r on r.meal = l.meal
 		  union all
-		  select w.user_id, w.meal, 'walk_in' as status, 'walk_in' as st, 2 as prio
+		  select w.user_id, w.meal::text as meal, 'walk_in' as status, 'walk_in' as st, 2 as prio
 		  from walk_in_records w
 		  where w.menu_date = $1::date
 		),

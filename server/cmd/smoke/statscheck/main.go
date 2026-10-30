@@ -56,6 +56,7 @@ func main() {
 		{"stats/signups", "/admin/stats/signups?date=" + today},
 		{"stats/departments", "/admin/stats/departments?date=" + today},
 		{"stats/daily", "/admin/stats/daily?from=" + monthAgo + "&to=" + today},
+		{"attendance-detail", "/admin/stats/attendance-detail?date=" + today + "&page=1&page_size=20"},
 	}
 	allOK := true
 	for _, ck := range checks {

@@ -26,7 +26,11 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { get, type SignupView } from '@canteen/api-client'
+import { showToast } from 'vant'
+
+const router = useRouter()
 
 const records = ref<SignupView[]>([])
 const counts = ref({ no_show: 0, walk_in: 0, total: 0 })
@@ -45,6 +49,12 @@ function tagType(s: string) {
 }
 
 onMounted(async () => {
+  const role = localStorage.getItem('canteen_role') || sessionStorage.getItem('canteen_role') || 'employee'
+  if (role !== 'employee') {
+    showToast('管理员请在管理端查看统计数据')
+    router.push('/menus')
+    return
+  }
   const data = await get('/my/signups')
   records.value = data.records || []
   const vc = await get('/my/violation-count')

@@ -30,10 +30,12 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (to.path === '/login') return true
   if (!getToken()) return '/login'
+  const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('canteen_role') || ''
+  // 超管拥有管理端全部页面的访问权
+  if (role === 'super_admin') return true
   const roles = to.meta.roles as string[] | undefined
-  if (roles && roles.length > 0) {
-    const role = sessionStorage.getItem('canteen_role') || localStorage.getItem('canteen_role') || ''
-    if (!roles.includes(role)) return '/verify'
+  if (roles && roles.length > 0 && !roles.includes(role)) {
+    return role === 'canteen_admin' ? '/verify' : '/login'
   }
   return true
 })

@@ -37,6 +37,10 @@ onMounted(async () => {
 
 function logout() {
   clearToken()
+  localStorage.removeItem('canteen_role')
+  localStorage.removeItem('canteen_name')
+  sessionStorage.removeItem('canteen_role')
+  sessionStorage.removeItem('canteen_name')
   router.push('/login')
 }
 </script>

@@ -12,8 +12,11 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { get, type Suggestion } from '@canteen/api-client'
+import { showToast } from 'vant'
 
+const router = useRouter()
 const list = ref<Suggestion[]>([])
 
 function statusText(s: string) {
@@ -24,6 +27,12 @@ function tagType(s: string): any {
 }
 
 onMounted(async () => {
+  const role = localStorage.getItem('canteen_role') || sessionStorage.getItem('canteen_role') || 'employee'
+  if (role !== 'employee') {
+    showToast('管理员请在管理端处理建议')
+    router.push('/menus')
+    return
+  }
   list.value = await get('/my/suggestions')
 })
 </script>

@@ -30,16 +30,16 @@
             <div class="dish-likes">
               <span :class="{ liked: myReviews[dish.dish_name] === 1 }">👍 {{ dish.like_count }}</span>
               <span :class="{ disliked: myReviews[dish.dish_name] === -1 }">👎 {{ dish.dislike_count }}</span>
-              <!-- 点评入口仅当日 -->
-              <span v-if="isToday && getToken()" class="review-actions">
+              <!-- 点评入口仅当日且仅员工 -->
+              <span v-if="isToday && isEmployee" class="review-actions">
                 <van-button size="mini" type="success" plain @click="review(dish, 1)">赞</van-button>
                 <van-button size="mini" type="danger" plain @click="review(dish, -1)">踩</van-button>
               </span>
             </div>
           </div>
         </div>
-        <!-- 报名条（按餐次维度） -->
-        <div v-if="getToken()" class="signup-bar">
+        <!-- 报名条（按餐次维度，仅员工角色） -->
+        <div v-if="isEmployee" class="signup-bar">
           <van-button
             block
             :type="signupState(m.key) === 'signed' ? 'success' : 'primary'"
@@ -48,6 +48,9 @@
           >
             {{ signupButtonText(m.key) }}
           </van-button>
+        </div>
+        <div v-else-if="getToken()" class="signup-bar">
+          <van-button block plain type="warning" @click="goAdmin">管理员账号请在管理端操作</van-button>
         </div>
         <div v-else class="signup-bar">
           <van-button block plain type="primary" @click="$router.push('/login')">登录后可报餐</van-button>
@@ -59,8 +62,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { get, post, del, getToken, type Dish, type SignupView } from '@canteen/api-client'
 import { showToast } from 'vant'
+
+const router = useRouter()
 
 const meals = [
   { key: 'breakfast', label: '早餐' },
@@ -98,6 +104,16 @@ const mySignups = ref<Record<string, string>>({}) // meal -> status
 const myReviews = ref<Record<string, number>>({})
 
 const isToday = computed(() => selectedDate.value === fmt(new Date()))
+// 报餐/点评是员工功能；管理员/超管在管理端操作
+const isEmployee = computed(() => {
+  if (!getToken()) return false
+  const role = localStorage.getItem('canteen_role') || sessionStorage.getItem('canteen_role') || 'employee'
+  return role === 'employee'
+})
+
+function goAdmin() {
+  router.push('/admin/')
+}
 
 async function loadMenus() {
   const start = fmt(new Date())

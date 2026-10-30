@@ -17,9 +17,11 @@ func main() {
 		os.Exit(1)
 	}
 	empNo, plain := os.Args[1], os.Args[2]
+	// 连接串只从环境变量读取，代码中不落任何真实凭据
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgresql://postgres.yikizzibtsokolgnnkfi:MyDb2026Secure!789@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
+		fmt.Fprintln(os.Stderr, "missing env DATABASE_URL (e.g. set it to your Supabase Session Pooler connection string)")
+		os.Exit(1)
 	}
 	hash, err := auth.HashPassword(plain)
 	if err != nil {

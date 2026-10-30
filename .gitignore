@@ -11,6 +11,9 @@ dist/
 # Env
 .env
 .env.local
+scripts/local.env
+*.log
+
 
 # IDE
 .idea/

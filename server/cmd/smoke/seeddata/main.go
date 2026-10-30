@@ -14,14 +14,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-var dsn = envDefault("DATABASE_URL",
-	"postgresql://postgres.yikizzibtsokolgnnkfi:MyDb2026Secure!789@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require")
+// 数据库连接串只从环境变量读取，代码中不落任何真实凭据。
+var dsn = mustEnv("DATABASE_URL")
 
-func envDefault(k, def string) string {
-	if v := os.Getenv(k); v != "" {
-		return v
+func mustEnv(k string) string {
+	v := os.Getenv(k)
+	if v == "" {
+		fmt.Fprintf(os.Stderr, "missing env %s (e.g. set it to your Supabase Session Pooler connection string)\n", k)
+		os.Exit(1)
 	}
-	return def
+	return v
 }
 
 var rng = rand.New(rand.NewSource(20261030))

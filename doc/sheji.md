@@ -586,28 +586,31 @@ services:
 ### 7.3 Supabase 配置
 
 - 项目实际区域为 **eu-west-1（爱尔兰）**，Session Pooler 域名为 `aws-0-eu-west-1.pooler.supabase.com`。
-- **连接参数（已确定）**：
+- **连接参数（模板，真实凭据不入库）**：
 
 | 项 | 值 |
 |---|---|
 | host | `aws-0-eu-west-1.pooler.supabase.com` |
 | port | `5432`（Session Pooler） |
 | database | `postgres` |
-| user | `postgres.yikizzibtsokolgnnkfi` |
-| password | `MyDb2026Secure!789` |
+| user | `postgres.<项目ref>` |
+| password | **只在 Supabase 控制台查看/重置，不写入任何文件** |
 
-- 完整 `DATABASE_URL`：
+- 完整 `DATABASE_URL` 模板（真实值只配置在 Render 环境变量与本地 `scripts/local.env`）：
 
   ```
-  postgresql://postgres.yikizzibtsokolgnnkfi:MyDb2026Secure!789@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require
+  postgresql://postgres.<项目ref>:<数据库密码>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require
   ```
 
+- **凭据管理约定**：
+  - 本地：`scripts/local.env`（已被 `.gitignore` 忽略）保存真实连接串，`start-local.cmd` 自动加载
+  - Render：`DATABASE_URL` 环境变量（`sync: false`，部署时在控制台录入）
+  - 建议部署前在 Supabase 控制台重置一次数据库密码，旧密码作废
 - Session 模式兼容 pgx 的 prepared statements；pooler 域名走 IPv4，Render 容器与本地开发机均可直连；`db.<项目ref>.supabase.co:5432` 直连串为 IPv6-only（Render 容器无 IPv6 出口），不使用。
 - 不使用 **Transaction Pooler（端口 6543）**：transaction 模式与 pgx 默认语句缓存不兼容；若将来切换，必须配置 `default_query_exec_mode=simple_protocol`。
-- 迁移（`golang-migrate up`）通过同一连接串在本地或 CI 执行。
+- 迁移通过服务启动时的 `AUTO_MIGRATE=1` 自动执行（幂等），也可在本地手动执行同一连接串。
 - RLS 不启用（无 Supabase Auth，访问控制全部在 Go 层）。
 - **区域匹配**：Supabase 项目在 eu-west-1（爱尔兰），Render 服务选 **Frankfurt**（地理最近）以降低往返延迟；如改回 Singapore 亦可运行，但每次 DB 查询约多 200ms。
-- **安全提示**：以上密码已写入本文档。若仓库会推送到远端 Git，建议部署前在 Supabase 控制台重置数据库密码、只在 Render 环境变量中录入新值，避免凭据随代码库泄漏。
 
 ### 7.4 环境变量清单
 

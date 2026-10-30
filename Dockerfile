@@ -12,7 +12,7 @@ COPY apps apps
 RUN pnpm --filter @canteen/h5 build && pnpm --filter @canteen/admin build
 
 # 2. 构建 Go（embed 用 all: 前缀；源码内 cmd/api/static 放 .gitkeep 保证空目录可嵌入）
-FROM golang:1.22-alpine AS server
+FROM golang:1.25-alpine AS server
 WORKDIR /src
 COPY server/go.mod server/go.sum ./
 RUN go mod download

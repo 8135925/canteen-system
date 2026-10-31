@@ -229,6 +229,7 @@ type Store interface {
 	DeptDining(from, to string) ([]DeptDiningRow, error)
 	DishSatisfaction() (likeCount, dislikeCount int64, err error)
 	AttendanceDetail(date, dept, keyword string, page, pageSize int) ([]AttendanceRow, int64, error)
+	DBNow() (time.Time, error)
 }
 
 // AttendanceRow 用餐明细行：某天某人在三餐上的状态。

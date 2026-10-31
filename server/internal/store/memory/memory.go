@@ -51,6 +51,9 @@ func (s *Store) id() int64 {
 
 func (s *Store) Ping() error { return nil }
 
+// DBNow 内存实现：直接返回当前时间。
+func (s *Store) DBNow() (time.Time, error) { return time.Now(), nil }
+
 // —— users ——
 
 func (s *Store) CreateUser(u *store.User) error {

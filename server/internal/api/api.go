@@ -4,6 +4,7 @@ package api
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"canteen/server/internal/auth"
 	"canteen/server/internal/httpx"
@@ -113,7 +114,17 @@ func (s *Server) healthz(w http.ResponseWriter, r *http.Request) {
 		httpx.FailWith(w, httpx.CodeInternal, "db not ready")
 		return
 	}
-	httpx.OK(w, map[string]string{"status": "up"})
+	// 显式执行一次数据库查询：供 cron 定时访问时同时保活 Supabase（防暂停）
+	dbNow, err := s.St.DBNow()
+	if err != nil {
+		httpx.FailWith(w, httpx.CodeInternal, "db not ready")
+		return
+	}
+	httpx.OK(w, map[string]any{
+		"status":  "up",
+		"db":      "up",
+		"db_time": dbNow.Format(time.RFC3339),
+	})
 }
 
 // parsePagination 解析分页参数。

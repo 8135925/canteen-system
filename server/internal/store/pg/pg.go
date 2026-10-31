@@ -41,6 +41,14 @@ func (s *Store) Close() { s.pool.Close() }
 
 func (s *Store) Ping() error { return s.pool.Ping(context.Background()) }
 
+// DBNow 显式执行一次数据库查询（select now()），供健康检查产生真实的 DB 活动，
+// 防止 Supabase 免费档因长时间无查询而暂停。
+func (s *Store) DBNow() (time.Time, error) {
+	var now time.Time
+	err := s.pool.QueryRow(context.Background(), `select now() at time zone 'utc'`).Scan(&now)
+	return now, err
+}
+
 // Migrate 执行内嵌 SQL 迁移（AUTO_MIGRATE=1 时由 main 调用）。
 func (s *Store) Migrate(ctx context.Context) error { return migrate.Up(ctx, s.pool) }
 
